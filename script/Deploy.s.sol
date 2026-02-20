@@ -28,10 +28,7 @@ contract Deploy is Script {
         // ─────────────────────────────────────────────────────────
         //  Step 1: Deploy Governance
         // ─────────────────────────────────────────────────────────
-        TimelockGovernor governance = new TimelockGovernor(
-            deployer,
-            Constants.TIMELOCK_DELAY
-        );
+        TimelockGovernor governance = new TimelockGovernor(deployer, Constants.TIMELOCK_DELAY);
         console.log("TimelockGovernor:", address(governance));
 
         // ─────────────────────────────────────────────────────────
@@ -43,10 +40,7 @@ contract Deploy is Script {
         // ─────────────────────────────────────────────────────────
         //  Step 3: Deploy Strategy Engine
         // ─────────────────────────────────────────────────────────
-        StrategyEngine engine = new StrategyEngine(
-            address(vault),
-            address(governance)
-        );
+        StrategyEngine engine = new StrategyEngine(address(vault), address(governance));
         console.log("StrategyEngine:", address(engine));
 
         // ─────────────────────────────────────────────────────────
@@ -67,16 +61,10 @@ contract Deploy is Script {
         // ─────────────────────────────────────────────────────────
         //  Step 6: Deploy Modules
         // ─────────────────────────────────────────────────────────
-        HedgingEngine hedgingEngine = new HedgingEngine(
-            address(engine),
-            address(riskManager)
-        );
+        HedgingEngine hedgingEngine = new HedgingEngine(address(engine), address(riskManager));
         console.log("HedgingEngine:", address(hedgingEngine));
 
-        RebalanceModule rebalanceModule = new RebalanceModule(
-            address(engine),
-            address(riskManager)
-        );
+        RebalanceModule rebalanceModule = new RebalanceModule(address(engine), address(riskManager));
         console.log("RebalanceModule:", address(rebalanceModule));
 
         AutoCompounder autoCompounder = new AutoCompounder(address(engine));

@@ -33,10 +33,10 @@ contract RiskManager {
     //  Types
     // ─────────────────────────────────────────────────────────────
     enum VolatilityState {
-        LOW,       // Normal operations, full LP exposure
-        MEDIUM,    // Reduced LP, increased hedging
-        HIGH,      // Minimal LP, shift to stables
-        EXTREME    // Emergency: pause new deployments
+        LOW, // Normal operations, full LP exposure
+        MEDIUM, // Reduced LP, increased hedging
+        HIGH, // Minimal LP, shift to stables
+        EXTREME // Emergency: pause new deployments
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -108,13 +108,7 @@ contract RiskManager {
     }
 
     function _getValidatedPrice(IChainlinkOracle oracle) internal view returns (uint256) {
-        (
-            uint80 roundId,
-            int256 answer,
-            ,
-            uint256 updatedAt,
-            uint80 answeredInRound
-        ) = oracle.latestRoundData();
+        (uint80 roundId, int256 answer,, uint256 updatedAt, uint80 answeredInRound) = oracle.latestRoundData();
 
         // Staleness check
         if (block.timestamp - updatedAt > oracleStalenessPeriod) {
@@ -199,13 +193,17 @@ contract RiskManager {
 
             // Classify volatility
             VolatilityState newState;
-            if (priceChangeAccumulator < 200) {       // < 2%
+            if (priceChangeAccumulator < 200) {
+                // < 2%
                 newState = VolatilityState.LOW;
-            } else if (priceChangeAccumulator < 500) { // 2-5%
+            } else if (priceChangeAccumulator < 500) {
+                // 2-5%
                 newState = VolatilityState.MEDIUM;
-            } else if (priceChangeAccumulator < 1000) { // 5-10%
+            } else if (priceChangeAccumulator < 1000) {
+                // 5-10%
                 newState = VolatilityState.HIGH;
-            } else {                                     // > 10%
+            } else {
+                // > 10%
                 newState = VolatilityState.EXTREME;
             }
 
@@ -246,11 +244,7 @@ contract RiskManager {
     /// @notice Get recommended allocation adjustments based on volatility
     /// @return asterBps Recommended AsterDEX allocation in bps
     /// @return pancakeBps Recommended PancakeSwap allocation in bps
-    function getVolatilityAdjustedAllocation()
-        external
-        view
-        returns (uint256 asterBps, uint256 pancakeBps)
-    {
+    function getVolatilityAdjustedAllocation() external view returns (uint256 asterBps, uint256 pancakeBps) {
         if (currentVolatility == VolatilityState.LOW) {
             // Normal: 70/30 split
             return (7_000, 3_000);

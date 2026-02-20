@@ -93,11 +93,7 @@ contract AutoCompounder is ReentrancyGuard {
     /// @param caller The address that triggered the compound
     /// @param harvested Total rewards harvested (in base asset terms)
     /// @param bounty Bounty paid to the caller
-    function recordCompound(
-        address caller,
-        uint256 harvested,
-        uint256 bounty
-    ) external onlyStrategyEngine {
+    function recordCompound(address caller, uint256 harvested, uint256 bounty) external onlyStrategyEngine {
         if (block.timestamp < lastCompoundTimestamp + compoundInterval) {
             revert CompoundTooSoon();
         }
@@ -111,11 +107,7 @@ contract AutoCompounder is ReentrancyGuard {
 
         // Store in history
         compoundHistory[historyIndex] = CompoundRecord({
-            timestamp: block.timestamp,
-            harvested: harvested,
-            compounded: compounded,
-            bountyPaid: bounty,
-            caller: caller
+            timestamp: block.timestamp, harvested: harvested, compounded: compounded, bountyPaid: bounty, caller: caller
         });
         historyIndex = (historyIndex + 1) % 100;
 
@@ -163,10 +155,7 @@ contract AutoCompounder is ReentrancyGuard {
     //  Governance
     // ─────────────────────────────────────────────────────────────
 
-    function updateCompoundParams(
-        uint256 _interval,
-        uint256 _bountyBps
-    ) external onlyStrategyEngine {
+    function updateCompoundParams(uint256 _interval, uint256 _bountyBps) external onlyStrategyEngine {
         require(_interval >= 10 minutes, "Interval too short");
         require(_bountyBps <= 500, "Bounty too high"); // Max 5%
         compoundInterval = _interval;

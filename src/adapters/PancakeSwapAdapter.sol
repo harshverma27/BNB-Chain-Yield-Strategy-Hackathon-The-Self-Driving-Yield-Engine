@@ -77,13 +77,12 @@ contract PancakeSwapAdapter is ReentrancyGuard {
     /// @param amountB Desired amount of tokenB
     /// @param slippageBps Slippage tolerance in basis points
     /// @return lpReceived Amount of LP tokens received
-    function addLiquidity(
-        address tokenA,
-        address tokenB,
-        uint256 amountA,
-        uint256 amountB,
-        uint256 slippageBps
-    ) external onlyStrategyEngine nonReentrant returns (uint256 lpReceived) {
+    function addLiquidity(address tokenA, address tokenB, uint256 amountA, uint256 amountB, uint256 slippageBps)
+        external
+        onlyStrategyEngine
+        nonReentrant
+        returns (uint256 lpReceived)
+    {
         if (amountA == 0 || amountB == 0) revert ZeroAmount();
 
         address pair = factory.getPair(tokenA, tokenB);
@@ -99,14 +98,7 @@ contract PancakeSwapAdapter is ReentrancyGuard {
 
         // Add liquidity
         (uint256 actualA, uint256 actualB, uint256 liquidity) = router.addLiquidity(
-            tokenA,
-            tokenB,
-            amountA,
-            amountB,
-            amountAMin,
-            amountBMin,
-            address(this),
-            block.timestamp + 300
+            tokenA, tokenB, amountA, amountB, amountAMin, amountBMin, address(this), block.timestamp + 300
         );
 
         // Track position
@@ -137,11 +129,12 @@ contract PancakeSwapAdapter is ReentrancyGuard {
     /// @param pair LP pair address
     /// @param lpAmount Amount of LP to remove
     /// @param slippageBps Slippage tolerance in bps
-    function removeLiquidity(
-        address pair,
-        uint256 lpAmount,
-        uint256 slippageBps
-    ) external onlyStrategyEngine nonReentrant returns (uint256 amountA, uint256 amountB) {
+    function removeLiquidity(address pair, uint256 lpAmount, uint256 slippageBps)
+        external
+        onlyStrategyEngine
+        nonReentrant
+        returns (uint256 amountA, uint256 amountB)
+    {
         LPPosition storage pos = lpPositions[pair];
         if (pos.lpBalance < lpAmount) revert InsufficientLiquidity();
 
@@ -158,15 +151,8 @@ contract PancakeSwapAdapter is ReentrancyGuard {
         IPancakePairV2(pair).approve(address(router), lpAmount);
 
         // Remove liquidity
-        (amountA, amountB) = router.removeLiquidity(
-            pos.tokenA,
-            pos.tokenB,
-            lpAmount,
-            minA,
-            minB,
-            address(this),
-            block.timestamp + 300
-        );
+        (amountA, amountB) =
+            router.removeLiquidity(pos.tokenA, pos.tokenB, lpAmount, minA, minB, address(this), block.timestamp + 300);
 
         // Update position
         pos.lpBalance -= lpAmount;
@@ -188,12 +174,12 @@ contract PancakeSwapAdapter is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     /// @notice Swap tokens via PancakeSwap V2 with slippage protection
-    function swap(
-        address tokenIn,
-        address tokenOut,
-        uint256 amountIn,
-        uint256 slippageBps
-    ) external onlyStrategyEngine nonReentrant returns (uint256 amountOut) {
+    function swap(address tokenIn, address tokenOut, uint256 amountIn, uint256 slippageBps)
+        external
+        onlyStrategyEngine
+        nonReentrant
+        returns (uint256 amountOut)
+    {
         if (amountIn == 0) revert ZeroAmount();
 
         address[] memory path = new address[](2);
@@ -207,13 +193,8 @@ contract PancakeSwapAdapter is ReentrancyGuard {
 
         // Approve and swap
         IERC20(tokenIn).approve(address(router), amountIn);
-        uint256[] memory amounts = router.swapExactTokensForTokens(
-            amountIn,
-            minOut,
-            path,
-            strategyEngine,
-            block.timestamp + 300
-        );
+        uint256[] memory amounts =
+            router.swapExactTokensForTokens(amountIn, minOut, path, strategyEngine, block.timestamp + 300);
 
         amountOut = amounts[amounts.length - 1];
         emit TokensSwapped(tokenIn, tokenOut, amountIn, amountOut);

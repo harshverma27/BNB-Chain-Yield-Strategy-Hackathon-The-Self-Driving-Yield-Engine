@@ -34,11 +34,7 @@ contract StrategyEngine is ReentrancyGuard {
     //  Events
     // ─────────────────────────────────────────────────────────────
     event StrategyExecuted(
-        address indexed caller,
-        uint256 totalValue,
-        uint256 harvested,
-        uint256 keeperBounty,
-        uint256 timestamp
+        address indexed caller, uint256 totalValue, uint256 harvested, uint256 keeperBounty, uint256 timestamp
     );
     event CapitalDeployed(uint256 toAster, uint256 toPancake);
     event CapitalWithdrawn(uint256 fromAster, uint256 fromPancake);
@@ -65,13 +61,13 @@ contract StrategyEngine is ReentrancyGuard {
     // Strategy state
     bool public initialized;
     bool public paused;
-    uint256 public totalDeployed;          // Total capital deployed across all protocols
+    uint256 public totalDeployed; // Total capital deployed across all protocols
     uint256 public lastExecutionTimestamp;
     uint256 public totalExecutions;
 
     // Capital tracking
-    uint256 public asterCapital;           // Capital deployed to AsterDEX Earn
-    uint256 public pancakeCapital;         // Capital deployed to PancakeSwap
+    uint256 public asterCapital; // Capital deployed to AsterDEX Earn
+    uint256 public pancakeCapital; // Capital deployed to PancakeSwap
 
     // ─────────────────────────────────────────────────────────────
     //  Constructor
@@ -131,12 +127,7 @@ contract StrategyEngine is ReentrancyGuard {
     /// @dev Caller receives a gas bounty as incentive (% of harvested yield)
     /// @return harvested Total rewards harvested
     /// @return bounty Bounty paid to caller
-    function executeStrategy()
-        external
-        nonReentrant
-        whenNotPaused
-        returns (uint256 harvested, uint256 bounty)
-    {
+    function executeStrategy() external nonReentrant whenNotPaused returns (uint256 harvested, uint256 bounty) {
         require(initialized, "Not initialized");
 
         // 1. Check if execution is allowed by risk manager
@@ -272,24 +263,14 @@ contract StrategyEngine is ReentrancyGuard {
         IERC20(address(wbnb)).safeTransfer(address(pancakeAdapter), wbnbAmount);
 
         // Swap half for USDT via PancakeSwap
-        uint256 usdtReceived = pancakeAdapter.swap(
-            Constants.WBNB,
-            Constants.USDT,
-            halfAmount,
-            Constants.MAX_SLIPPAGE_BPS
-        );
+        uint256 usdtReceived =
+            pancakeAdapter.swap(Constants.WBNB, Constants.USDT, halfAmount, Constants.MAX_SLIPPAGE_BPS);
 
         // The USDT comes back to this contract, send it to adapter
         usdt.safeTransfer(address(pancakeAdapter), usdtReceived);
 
         // Add liquidity
-        pancakeAdapter.addLiquidity(
-            Constants.WBNB,
-            Constants.USDT,
-            otherHalf,
-            usdtReceived,
-            Constants.MAX_SLIPPAGE_BPS
-        );
+        pancakeAdapter.addLiquidity(Constants.WBNB, Constants.USDT, otherHalf, usdtReceived, Constants.MAX_SLIPPAGE_BPS);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -334,14 +315,11 @@ contract StrategyEngine is ReentrancyGuard {
 
         // Also count any USDT harvested (swap to WBNB for uniform accounting)
         uint256 usdtBal = usdt.balanceOf(address(this));
-        if (usdtBal > 0 && usdtBal > 1e15) { // min threshold to avoid dust swaps
+        if (usdtBal > 0 && usdtBal > 1e15) {
+            // min threshold to avoid dust swaps
             usdt.safeTransfer(address(pancakeAdapter), usdtBal);
-            uint256 wbnbFromUsdt = pancakeAdapter.swap(
-                Constants.USDT,
-                Constants.WBNB,
-                usdtBal,
-                Constants.MAX_SLIPPAGE_BPS
-            );
+            uint256 wbnbFromUsdt =
+                pancakeAdapter.swap(Constants.USDT, Constants.WBNB, usdtBal, Constants.MAX_SLIPPAGE_BPS);
             totalHarvested += wbnbFromUsdt;
         }
     }
@@ -351,10 +329,7 @@ contract StrategyEngine is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
 
     function _rebalance() internal {
-        RebalanceModule.RebalanceAction memory action = rebalanceModule.evaluateRebalance(
-            asterCapital,
-            pancakeCapital
-        );
+        RebalanceModule.RebalanceAction memory action = rebalanceModule.evaluateRebalance(asterCapital, pancakeCapital);
 
         if (!action.needsRebalance) return;
 
@@ -372,12 +347,7 @@ contract StrategyEngine is ReentrancyGuard {
         }
 
         // Record the rebalance
-        rebalanceModule.recordRebalance(
-            asterCapital,
-            pancakeCapital,
-            action.asterDelta,
-            action.pancakeDelta
-        );
+        rebalanceModule.recordRebalance(asterCapital, pancakeCapital, action.asterDelta, action.pancakeDelta);
     }
 
     function _deployToAster(uint256 amount) internal {

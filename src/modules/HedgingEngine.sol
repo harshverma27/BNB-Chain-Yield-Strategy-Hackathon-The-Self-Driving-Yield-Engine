@@ -35,12 +35,12 @@ contract HedgingEngine is ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
     struct HedgePosition {
         bool active;
-        uint256 bnbExposure;       // Total BNB exposure from LPs
-        uint256 hedgeSize;         // Size of short perp in BNB terms
-        uint256 collateralUsed;    // asUSDF collateral used
-        uint256 entryPrice;        // BNB price at hedge entry
+        uint256 bnbExposure; // Total BNB exposure from LPs
+        uint256 hedgeSize; // Size of short perp in BNB terms
+        uint256 collateralUsed; // asUSDF collateral used
+        uint256 entryPrice; // BNB price at hedge entry
         uint256 openTimestamp;
-        uint256 hedgeRatioBps;     // Actual hedge ratio in bps
+        uint256 hedgeRatioBps; // Actual hedge ratio in bps
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -52,8 +52,8 @@ contract HedgingEngine is ReentrancyGuard {
     HedgePosition public currentHedge;
 
     // Configurable parameters (via timelock)
-    uint256 public hedgeRatioBps;           // Target hedge ratio
-    uint256 public maxFundingRateBps;       // Max acceptable funding rate
+    uint256 public hedgeRatioBps; // Target hedge ratio
+    uint256 public maxFundingRateBps; // Max acceptable funding rate
     uint256 public hedgeAdjustThresholdBps; // Min exposure change to trigger adjustment
 
     // Simulated PnL tracking (in production this reads from AsterDEX perp positions)
@@ -83,10 +83,7 @@ contract HedgingEngine is ReentrancyGuard {
     /// @notice Open or adjust hedge based on current BNB exposure from LP positions
     /// @param bnbExposure Total BNB held in LP positions (in BNB, 18 decimals)
     /// @param availableCollateral Available asUSDF for collateral
-    function updateHedge(
-        uint256 bnbExposure,
-        uint256 availableCollateral
-    ) external onlyStrategyEngine nonReentrant {
+    function updateHedge(uint256 bnbExposure, uint256 availableCollateral) external onlyStrategyEngine nonReentrant {
         uint256 bnbPrice = riskManager.getBnbPrice();
         uint256 targetHedgeSize = bnbExposure.bpsMul(hedgeRatioBps);
 
@@ -144,12 +141,7 @@ contract HedgingEngine is ReentrancyGuard {
     //  Internal Hedge Logic
     // ─────────────────────────────────────────────────────────────
 
-    function _openHedge(
-        uint256 hedgeSize,
-        uint256 collateral,
-        uint256 bnbExposure,
-        uint256 entryPrice
-    ) internal {
+    function _openHedge(uint256 hedgeSize, uint256 collateral, uint256 bnbExposure, uint256 entryPrice) internal {
         currentHedge = HedgePosition({
             active: true,
             bnbExposure: bnbExposure,
@@ -163,11 +155,7 @@ contract HedgingEngine is ReentrancyGuard {
         emit HedgeOpened(bnbExposure, hedgeSize, hedgeRatioBps);
     }
 
-    function _adjustHedge(
-        uint256 newHedgeSize,
-        uint256 newBnbExposure,
-        uint256 currentPrice
-    ) internal {
+    function _adjustHedge(uint256 newHedgeSize, uint256 newBnbExposure, uint256 currentPrice) internal {
         uint256 oldSize = currentHedge.hedgeSize;
 
         // Settle PnL from old position
@@ -189,13 +177,12 @@ contract HedgingEngine is ReentrancyGuard {
 
         if (currentPrice <= currentHedge.entryPrice) {
             // Price went down — short is profitable
-            uint256 profit = (currentHedge.hedgeSize * (currentHedge.entryPrice - currentPrice))
-                / currentHedge.entryPrice;
+            uint256 profit =
+                (currentHedge.hedgeSize * (currentHedge.entryPrice - currentPrice)) / currentHedge.entryPrice;
             return int256(profit);
         } else {
             // Price went up — short is at loss
-            uint256 loss = (currentHedge.hedgeSize * (currentPrice - currentHedge.entryPrice))
-                / currentHedge.entryPrice;
+            uint256 loss = (currentHedge.hedgeSize * (currentPrice - currentHedge.entryPrice)) / currentHedge.entryPrice;
             return -int256(loss);
         }
     }
@@ -239,11 +226,10 @@ contract HedgingEngine is ReentrancyGuard {
     //  Governance
     // ─────────────────────────────────────────────────────────────
 
-    function updateHedgeParams(
-        uint256 _hedgeRatioBps,
-        uint256 _maxFundingRateBps,
-        uint256 _adjustThresholdBps
-    ) external onlyStrategyEngine {
+    function updateHedgeParams(uint256 _hedgeRatioBps, uint256 _maxFundingRateBps, uint256 _adjustThresholdBps)
+        external
+        onlyStrategyEngine
+    {
         require(_hedgeRatioBps <= Constants.BASIS_POINTS, "Hedge ratio too high");
         hedgeRatioBps = _hedgeRatioBps;
         maxFundingRateBps = _maxFundingRateBps;

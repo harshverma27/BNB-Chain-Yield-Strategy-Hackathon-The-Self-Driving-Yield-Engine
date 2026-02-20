@@ -35,9 +35,9 @@ contract RebalanceModule {
     // ─────────────────────────────────────────────────────────────
     struct RebalanceAction {
         bool needsRebalance;
-        int256 asterDelta;     // Positive = add to Aster, Negative = remove from Aster
-        int256 pancakeDelta;   // Positive = add to PancakeSwap, Negative = remove
-        uint256 urgency;       // 0-10 how urgent the rebalance is
+        int256 asterDelta; // Positive = add to Aster, Negative = remove from Aster
+        int256 pancakeDelta; // Positive = add to PancakeSwap, Negative = remove
+        uint256 urgency; // 0-10 how urgent the rebalance is
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -86,10 +86,11 @@ contract RebalanceModule {
     /// @param asterValue Current value in AsterDEX Earn (in USD, 18 decimals)
     /// @param pancakeValue Current value in PancakeSwap LPs (in USD, 18 decimals)
     /// @return action The rebalancing action to take
-    function evaluateRebalance(
-        uint256 asterValue,
-        uint256 pancakeValue
-    ) external view returns (RebalanceAction memory action) {
+    function evaluateRebalance(uint256 asterValue, uint256 pancakeValue)
+        external
+        view
+        returns (RebalanceAction memory action)
+    {
         uint256 totalValue = asterValue + pancakeValue;
         if (totalValue == 0) return action;
 
@@ -140,25 +141,16 @@ contract RebalanceModule {
     }
 
     /// @notice Record that a rebalance was executed
-    function recordRebalance(
-        uint256 asterValue,
-        uint256 pancakeValue,
-        int256 asterDelta,
-        int256 pancakeDelta
-    ) external onlyStrategyEngine {
+    function recordRebalance(uint256 asterValue, uint256 pancakeValue, int256 asterDelta, int256 pancakeDelta)
+        external
+        onlyStrategyEngine
+    {
         (uint256 adjAsterBps, uint256 adjPancakeBps) = riskManager.getVolatilityAdjustedAllocation();
 
         lastRebalanceTimestamp = block.timestamp;
         totalRebalances++;
 
-        emit RebalanceTriggered(
-            asterValue,
-            pancakeValue,
-            adjAsterBps,
-            adjPancakeBps,
-            asterDelta,
-            pancakeDelta
-        );
+        emit RebalanceTriggered(asterValue, pancakeValue, adjAsterBps, adjPancakeBps, asterDelta, pancakeDelta);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -183,11 +175,10 @@ contract RebalanceModule {
     //  Governance
     // ─────────────────────────────────────────────────────────────
 
-    function updateRebalanceParams(
-        uint256 _thresholdBps,
-        uint256 _minInterval,
-        uint256 _maxInterval
-    ) external onlyStrategyEngine {
+    function updateRebalanceParams(uint256 _thresholdBps, uint256 _minInterval, uint256 _maxInterval)
+        external
+        onlyStrategyEngine
+    {
         require(_thresholdBps >= 100 && _thresholdBps <= 2_000, "Invalid threshold");
         require(_minInterval >= 15 minutes, "Interval too short");
         require(_maxInterval >= _minInterval, "Max must exceed min");
@@ -197,10 +188,7 @@ contract RebalanceModule {
         maxRebalanceInterval = _maxInterval;
     }
 
-    function updateAllocationTargets(
-        uint256 _asterBps,
-        uint256 _pancakeBps
-    ) external onlyStrategyEngine {
+    function updateAllocationTargets(uint256 _asterBps, uint256 _pancakeBps) external onlyStrategyEngine {
         require(_asterBps + _pancakeBps == Constants.BASIS_POINTS, "Must sum to 10000");
         targetAsterBps = _asterBps;
         targetPancakeBps = _pancakeBps;

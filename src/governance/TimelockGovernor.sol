@@ -30,7 +30,7 @@ contract TimelockGovernor {
     struct Proposal {
         address target;
         bytes data;
-        uint256 eta;       // Earliest Time of Arrival (execution time)
+        uint256 eta; // Earliest Time of Arrival (execution time)
         bool executed;
         bool cancelled;
     }
@@ -38,8 +38,8 @@ contract TimelockGovernor {
     // ─────────────────────────────────────────────────────────────
     //  State
     // ─────────────────────────────────────────────────────────────
-    address public governor;    // Initially deployer, can transfer via timelock
-    uint256 public delay;       // Timelock delay (48 hours default)
+    address public governor; // Initially deployer, can transfer via timelock
+    uint256 public delay; // Timelock delay (48 hours default)
     uint256 public constant GRACE_PERIOD = 14 days; // Proposals expire after grace period
     uint256 public constant MIN_DELAY = 1 hours;
     uint256 public constant MAX_DELAY = 30 days;
@@ -69,23 +69,13 @@ contract TimelockGovernor {
     /// @param target Contract to call
     /// @param data Encoded function call
     /// @return proposalId Unique ID of the proposal
-    function queueProposal(address target, bytes calldata data)
-        external
-        onlyGovernor
-        returns (bytes32 proposalId)
-    {
+    function queueProposal(address target, bytes calldata data) external onlyGovernor returns (bytes32 proposalId) {
         uint256 eta = block.timestamp + delay;
         proposalId = keccak256(abi.encode(target, data, eta));
 
         if (proposals[proposalId].eta != 0) revert ProposalAlreadyQueued();
 
-        proposals[proposalId] = Proposal({
-            target: target,
-            data: data,
-            eta: eta,
-            executed: false,
-            cancelled: false
-        });
+        proposals[proposalId] = Proposal({target: target, data: data, eta: eta, executed: false, cancelled: false});
 
         proposalIds.push(proposalId);
 
@@ -155,9 +145,9 @@ contract TimelockGovernor {
     /// @notice Check if a proposal is ready to execute
     function isProposalReady(bytes32 proposalId) external view returns (bool) {
         Proposal memory p = proposals[proposalId];
-        return p.eta > 0 && !p.executed && !p.cancelled
-            && block.timestamp >= p.eta
-            && block.timestamp <= p.eta + GRACE_PERIOD;
+        return
+            p.eta > 0 && !p.executed && !p.cancelled && block.timestamp >= p.eta
+                && block.timestamp <= p.eta + GRACE_PERIOD;
     }
 
     /// @notice Get all pending proposals

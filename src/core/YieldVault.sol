@@ -44,10 +44,10 @@ contract YieldVault is ERC20, ReentrancyGuard {
     StrategyEngine public strategyEngine;
 
     // Vault parameters
-    uint256 public maxDepositPerUser;     // Max deposit per user (0 = unlimited)
-    uint256 public totalDepositCap;       // Total vault deposit cap (0 = unlimited)
-    uint256 public depositFee;            // Deposit fee in bps (0 default)
-    uint256 public withdrawFee;           // Withdrawal fee in bps (0 default)
+    uint256 public maxDepositPerUser; // Max deposit per user (0 = unlimited)
+    uint256 public totalDepositCap; // Total vault deposit cap (0 = unlimited)
+    uint256 public depositFee; // Deposit fee in bps (0 default)
+    uint256 public withdrawFee; // Withdrawal fee in bps (0 default)
 
     // Tracking
     mapping(address => uint256) public userDeposits;
@@ -56,12 +56,10 @@ contract YieldVault is ERC20, ReentrancyGuard {
     // ─────────────────────────────────────────────────────────────
     //  Constructor
     // ─────────────────────────────────────────────────────────────
-    constructor()
-        ERC20("Self-Driving Yield Engine", "sdYIELD")
-    {
+    constructor() ERC20("Self-Driving Yield Engine", "sdYIELD") {
         wbnb = IWBNB(Constants.WBNB);
         maxDepositPerUser = 0; // Unlimited by default
-        totalDepositCap = 0;   // Unlimited by default
+        totalDepositCap = 0; // Unlimited by default
     }
 
     /// @notice Set the strategy engine address (called once after deployment)
